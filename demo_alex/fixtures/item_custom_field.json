@@ -1,0 +1,14 @@
+{
+    "doctype": "Custom Field",
+    "name":"custom_add_price",
+    "dt": "Item Attribute Value",
+    "fieldname": "custom_add_price",
+    "label": "Add Price",
+    "fieldtype": "Currency",
+    "insert_after": "attribute_value",
+    "options": "currency",
+    "default": 0,
+    "reqd": 0,
+    "hidden": 0
+
+}
