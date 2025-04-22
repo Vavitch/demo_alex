@@ -38,21 +38,25 @@ doc_events = {
 # our client scripts
 app_include_js = [
     
-#    "assets/demo_alex/js/app_config.js?ver="  + now_datetime().strftime("%Y%m%d%H%M%S"),
+    "assets/demo_alex/js/phone_call.js",
+    "assets/demo_alex/js/app_config.js",
     "assets/demo_alex/js/save_single_variant.js?ver="  + now_datetime().strftime("%Y%m%d%H%M%S"),
     "assets/demo_alex/js/item_variant_client.js?ver=" +  now_datetime().strftime("%Y%m%d%H%M%S"),
     "assets/demo_alex/js/change_order.js?ver=" +  now_datetime().strftime("%Y%m%d%H%M%S"),
     "assets/demo_alex/js/create_attributes_dialog_desktop.js?ver="  + now_datetime().strftime("%Y%m%d%H%M%S"),
     "assets/demo_alex/js/create_attributes_dialog_phone.js?ver="  + now_datetime().strftime("%Y%m%d%H%M%S"),
     "assets/demo_alex/js/pick_attributes.js?ver=" + now_datetime().strftime("%Y%m%d%H%M%S"),
-    "assets/demo_alex/js/pick_from_template.js?ver=" + now_datetime().strftime("%Y%m%d%H%M%S")
-  #  "assets/demo_alex/js/temp.js?ver=" + now_datetime().strftime("%Y%m%d%H%M%S")
+    "assets/demo_alex/js/pick_from_template.js?ver=" + now_datetime().strftime("%Y%m%d%H%M%S"),
+    "assets/demo_alex/js/anrufsimulation_taste.js?ver=" + now_datetime().strftime("%Y%m%d%H%M%S"),
+    "assets/demo_alex/js/call_dialog.js?ver=" + now_datetime().strftime("%Y%m%d%H%M%S")
     
     
 ]
-#app_include_js += ["demo_alex/api.py"]
+
 #-----------------------------------------------------
-# our Doctypes
+app_include_css = [
+    "assets/demo_alex/css/call_dialog.css"
+]
 
 #-------------------------------------------------------
 
