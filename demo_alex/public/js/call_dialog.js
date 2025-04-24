@@ -13,6 +13,9 @@ frappe.CallDialog = class {
         this.startTimer = this.startTimer.bind(this);
         this.updateTimerDisplay = this.updateTimerDisplay.bind(this);
         this.saveCallRecord = this.saveCallRecord.bind(this);
+        this.showOpenSalesOrders = this.showOpenSalesOrders.bind(this);
+        this.showOpenQuotations = this.showOpenQuotations.bind(this);
+        this.showResultsDialog = this.showResultsDialog.bind(this);
     }
 
     show(callType, customerName) {
@@ -241,7 +244,7 @@ frappe.CallDialog = class {
         });
     }
 
-    renderDialogContent(contactData, callType, customerName) {
+   renderDialogContent(contactData, callType, customerName) {
     const title = this.getDialogTitle(callType, customerName, contactData);
     const phone = this.getBestPhoneNumber(contactData);
     const displayName = contactData.full_name 
@@ -332,6 +335,35 @@ frappe.CallDialog = class {
                             border: 1px solid #e5e5e5;
                         ">00:00</span>
                     </div>
+                    <div class="action-links" style="margin-top: 20px;">
+                        <div class="action-link" id="show-sales-orders-btn" style="
+                            color: #2e7d32;
+                            cursor: pointer;
+                            padding: 8px 12px;
+                            font-weight: 500;
+                            display: flex;
+                            align-items: center;
+                            border-radius: 3px;
+                            margin-bottom: 8px;
+                            background: #f5f5f5;
+                        ">
+                            <i class="fa fa-file-text-o" style="margin-right: 8px;"></i>
+                            ${__('Daten zu offenen Rechnungen anzeigen')}
+                        </div>
+                        <div class="action-link" id="show-quotations-btn" style="
+                            color: #2e7d32;
+                            cursor: pointer;
+                            padding: 8px 12px;
+                            font-weight: 500;
+                            display: flex;
+                            align-items: center;
+                            border-radius: 3px;
+                            background: #f5f5f5;
+                        ">
+                            <i class="fa fa-list-alt" style="margin-right: 8px;"></i>
+                            ${__('Daten zu offenen Angeboten anzeigen')}
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="dialog-footer" style="
@@ -341,6 +373,17 @@ frappe.CallDialog = class {
                 background-color: #dcedc8;
                 background-image: none;
             ">
+                <button class="btn btn-default btn-note" style="
+                    padding: 6px 12px;
+                    font-size: 12px;
+                    border-radius: 3px;
+                    background-color: #f5f5f5;
+                    color: #333;
+                    border: 1px solid #ddd;
+                    margin-right: 8px;
+                ">
+                    ${__('Note')}
+                </button>
                 <button class="btn btn-secondary btn-close-dialog" style="
                     padding: 6px 12px;
                     font-size: 12px;
@@ -350,14 +393,135 @@ frappe.CallDialog = class {
                     border: none;
                     transition: background-color 0.3s;
                 ">
-                    ${__('Close')}
+                    ${__('Schließen')}
                 </button>
             </div>
         </div>
     `;
     
-    // Добавляем обработчики событий
+    // Привязываем обработчики событий
+    this.wrapper.querySelector('#show-sales-orders-btn')?.addEventListener('click', () => {
+        this.showOpenSalesOrders(customerName);
+    });
+    
+    this.wrapper.querySelector('#show-quotations-btn')?.addEventListener('click', () => {
+        this.showOpenQuotations(customerName);
+    });
+
+    // Добавляем обработчик для кнопки Note
+    this.wrapper.querySelector('.btn-note')?.addEventListener('click', () => {
+        console.log('Note button clicked');
+        // Логика будет добавлена позже
+    });
+    
     this.bindCloseEvents();
+}
+
+    showOpenSalesOrders(customerName) {
+        frappe.call({
+            method: 'frappe.client.get_list',
+            args: {
+                doctype: 'Sales Order',
+                filters: [
+                    ['customer', '=', customerName],
+                    ['docstatus', '=', 0] // Черновики
+                ],
+                fields: ['name', 'transaction_date', 'grand_total'],
+                limit: 20
+            },
+            callback: (response) => {
+                this.showResultsDialog(
+                    __('Offene Rechnungen'),
+                    response.message || [],
+                    'Sales Order'
+                );
+            },
+            error: (err) => {
+                console.error("Error loading Sales Orders:", err);
+                frappe.msgprint(__('Fehler beim Laden der Rechnungen'));
+            }
+        });
+    }
+
+    showOpenQuotations(customerName) {
+        frappe.call({
+            method: 'frappe.client.get_list',
+            args: {
+                doctype: 'Quotation',
+                filters: [
+                    ['party_name', '=', customerName],
+                    ['docstatus', '=', 0] // Черновики
+                ],
+                fields: ['name', 'transaction_date', 'grand_total'],
+                limit: 20
+            },
+            callback: (response) => {
+                this.showResultsDialog(
+                    __('Offene Angebote'),
+                    response.message || [],
+                    'Quotation'
+                );
+            },
+            error: (err) => {
+                console.error("Error loading Quotations:", err);
+                frappe.msgprint(__('Fehler beim Laden der Angebote'));
+            }
+        });
+    }
+
+    showResultsDialog(title, items, doctype) {
+    // Заменяем пробелы на дефисы для корректного формирования URL
+    const doctypeUrl = doctype.toLowerCase().replace(/ /g, '-');
+    
+    let html = `
+        <div style="min-width: 500px;">
+    `;
+
+    if (items.length === 0) {
+        html += `<p>${__('Keine Einträge gefunden')}</p>`;
+    } else {
+        html += `
+            <table class="table table-bordered" style="width: 100%; margin-top: 15px;">
+                <thead>
+                    <tr>
+                        <th>${__('Dokument')}</th>
+                        <th>${__('Datum')}</th>
+                        <th>${__('Betrag')}</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        items.forEach(item => {
+            html += `
+                <tr>
+                    <td><a href="/app/${doctypeUrl}/${item.name}" target="_blank">${item.name}</a></td>
+                    <td>${item.transaction_date || '-'}</td>
+                    <td>${format_currency(item.grand_total)}</td>
+                </tr>
+            `;
+        });
+
+        html += `
+                </tbody>
+            </table>
+        `;
+    }
+
+    const dialog = new frappe.ui.Dialog({
+        title: title,
+        fields: [
+            {
+                fieldtype: 'HTML',
+                fieldname: 'results',
+                options: html
+            }
+        ],
+        primary_action_label: __('Schließen'),
+        primary_action: () => dialog.hide()
+    });
+    
+    dialog.show();
 }
 
     startTimer() {
@@ -392,17 +556,17 @@ frappe.CallDialog = class {
     }
 
     getDialogTitle(callType, customerName, contactData) {
-    let displayName;
-    if (contactData && contactData.full_name) {
-        displayName = `${contactData.full_name}<br><small>aus ${contactData.company_name || customerName}</small>`;
-    } else {
-        displayName = customerName;
+        let displayName;
+        if (contactData && contactData.full_name) {
+            displayName = `${contactData.full_name}<br><small>aus ${contactData.company_name || customerName}</small>`;
+        } else {
+            displayName = customerName;
+        }
+        
+        return callType === 'incoming' 
+            ? `${displayName} ${__('ruft für Sie an...')}`
+            : `${__('Sie rufen')} ${displayName} ${__('an...')}`;
     }
-    
-    return callType === 'incoming' 
-        ? `${displayName} ${__('ruft für Sie an...')}`
-        : `${__('Sie rufen')} ${displayName} ${__('an...')}`;
-}
 
     getBestPhoneNumber(contactData) {
         if (!contactData) return __('Nicht angegeben');
